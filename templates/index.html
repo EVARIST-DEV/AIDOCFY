@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Procurement AI Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        /* 1. Smooth Fade & Slide Up for Results */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-up {
+            animation: slideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* 2. Holographic Scanner Line for the Upload Area */
+        @keyframes scanline {
+            0% { top: 0%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+        .scanner-active {
+            position: relative;
+            overflow: hidden;
+            border-color: #3b82f6 !important; /* Turn border blue when scanning */
+            transition: all 0.3s ease;
+        }
+        .scanner-active::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 3px;
+            background: rgba(59, 130, 246, 0.9);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 1), 0 0 30px rgba(59, 130, 246, 0.6);
+            animation: scanline 1.5s linear infinite;
+        }
+
+        /* 3. High-Tech Button Glow */
+        .btn-cyber {
+            transition: all 0.3s ease;
+        }
+        .btn-cyber:hover {
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.6);
+            transform: translateY(-2px);
+        }
+
+        /* 4. Typewriter Cursor Blink for Loading Text */
+        @keyframes blink { 50% { opacity: 0; } }
+        .blinking-cursor::after {
+            content: '█';
+            margin-left: 5px;
+            color: #3b82f6;
+            animation: blink 1s step-start infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 p-10 font-sans">
+
+    <div class="max-w-5xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-slate-100 transition-all">
+        
+        <div class="flex items-center mb-6">
+            <span class="text-3xl mr-3 animate-pulse text-blue-600">🏢</span>
+            <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Tender Verification System <span class="text-blue-500 font-light">v2.0</span></h1>
+        </div>
+        
+        <div id="uploadZone" class="mb-8 p-8 border-2 border-dashed border-slate-300 rounded-xl text-center bg-slate-50 transition-colors">
+            <input type="file" id="invoiceUpload" class="mb-6 block w-full text-sm text-slate-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-full file:border-0
+                file:text-sm file:font-semibold
+                file:bg-blue-50 file:text-blue-700
+                hover:file:bg-blue-100 cursor-pointer mx-auto max-w-sm">
+            
+            <button onclick="uploadDocument()" class="btn-cyber bg-blue-600 text-white px-8 py-3 rounded-lg font-bold tracking-wide hover:bg-blue-700 active:scale-95">
+                INITIALIZE AI SCAN
+            </button>
+            
+            <p id="loadingStatus" class="text-blue-600 font-mono mt-4 hidden blinking-cursor tracking-widest font-semibold">
+                NEURAL NET PROCESSING
+            </p>
+        </div>
+
+        <div id="resultsSection" class="hidden grid grid-cols-2 gap-8 pt-4 border-t border-slate-100">
+            <div class="relative group">
+                <h2 class="text-lg font-bold mb-4 text-slate-700 flex items-center">
+                    <span class="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
+                    AI Vision Map
+                </h2>
+                <div class="overflow-hidden rounded-lg shadow-md border border-slate-200">
+                    <img id="processedImage" src="" alt="Processed Invoice" class="w-full transform transition duration-500 group-hover:scale-105">
+                </div>
+            </div>
+            
+            <div class="flex flex-col">
+                <h2 class="text-lg font-bold mb-4 text-slate-700 flex items-center">
+                    <span class="w-2 h-2 rounded-full bg-blue-500 mr-2 animate-pulse"></span>
+                    Decision Engine Output
+                </h2>
+                
+                <div id="decisionAlert" class="p-4 rounded-lg mb-4 text-white font-bold shadow-inner"></div>
+                <p id="decisionReason" class="text-slate-600 mb-6 font-medium leading-relaxed"></p>
+                
+                <h3 class="font-bold text-xs text-slate-400 uppercase tracking-widest mb-2 flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                    Raw Extracted Telemetry
+                </h3>
+                <div class="relative flex-grow">
+                    <pre id="jsonData" class="absolute inset-0 bg-slate-900 bg-opacity-95 text-green-400 p-4 rounded-lg text-xs overflow-auto font-mono shadow-inner border border-slate-800"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function uploadDocument() {
+            const fileInput = document.getElementById('invoiceUpload');
+            if (fileInput.files.length === 0) return alert("Please select a file.");
+
+            const uploadZone = document.getElementById('uploadZone');
+            const resultsSection = document.getElementById('resultsSection');
+            const loadingText = document.getElementById('loadingStatus');
+
+            // --- TRIGGER ANIMATIONS ---
+            // 1. Turn on the glowing scanner laser
+            uploadZone.classList.add('scanner-active');
+            uploadZone.classList.remove('border-slate-300');
+            // 2. Show the blinking loading text
+            loadingText.classList.remove('hidden');
+            // 3. Hide old results and reset animation
+            resultsSection.classList.add('hidden');
+            resultsSection.classList.remove('animate-slide-up');
+
+            const formData = new FormData();
+            formData.append("invoice_file", fileInput.files[0]);
+
+            try {
+                // Call our Flask API
+                const response = await fetch('/api/verify', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Populate UI with results
+                    document.getElementById('processedImage').src = data.image_url;
+                    
+                    const alertBox = document.getElementById('decisionAlert');
+                    alertBox.innerText = `STATUS: ${data.decision.status}`;
+                    alertBox.className = `p-4 rounded-lg mb-4 text-white font-bold tracking-wider ${data.decision.status === 'ACCEPT' ? 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.4)]' : 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)]'}`;
+                    
+                    document.getElementById('decisionReason').innerText = data.decision.reason;
+                    document.getElementById('jsonData').innerText = JSON.stringify(data.extracted_json, null, 2);
+
+                    // --- REVEAL RESULTS ANIMATION ---
+                    resultsSection.classList.remove('hidden');
+                    // Add the slide-up class to trigger the smooth entrance
+                    resultsSection.classList.add('animate-slide-up');
+                } else {
+                    alert("Error: " + data.error);
+                }
+            } catch (err) {
+                alert("Network error occurred.");
+            } finally {
+                // --- TURN OFF ANIMATIONS ---
+                uploadZone.classList.remove('scanner-active');
+                uploadZone.classList.add('border-slate-300');
+                loadingText.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

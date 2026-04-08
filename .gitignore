@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.env
+
+# Virtualenv
+venv/
+.env/
+
+# Editor
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Static outputs
+static/processed_images/
