@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Procurement Document Verifier
 
 A Flask-based OCR verification prototype with Gemini OCR stub, rule engine, and bounding-box visualization.
@@ -50,3 +51,7 @@ In `services/ai_engine.py`, replace the `run_ocr` dummy block with the actual Ge
 - `rules_engine.py` currently uses text matching for decisions.
 - `vision_engine.py` draws reds bounding boxes and text labels.
 - `static/processed_images` is excluded from git under `.gitignore`.
+=======
+# AIDOCFY
+AI document verifier
+>>>>>>> 11ba17a5b6ecb38987695a945310f702ea8e0a71
